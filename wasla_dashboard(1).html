@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wasla — الطلبات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Doto:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#000; --paper:#fff; --mist:#f3f3f3; --line:#d9d9d9; --mute:#6b6b6b;
+  --red:#e3262e; --red-soft:#fdeceb;
+  --f-body:'Cairo','Tajawal',system-ui,sans-serif;
+  --f-dot:'Doto','Cairo',monospace;
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--f-body);background:var(--paper);color:var(--ink);line-height:1.7;min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+.bar{background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:space-between;padding:12px clamp(16px,4vw,40px)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.mark{font-family:var(--f-dot);font-weight:900;font-size:28px;letter-spacing:.02em;line-height:1}
+.brand small{font-size:15px;opacity:.7}
+.bar-end{display:flex;align-items:center;gap:16px}
+.live{display:flex;align-items:center;gap:8px;font-size:14px}
+.live i{width:9px;height:9px;border-radius:50%;background:#777}
+.live.on i{background:var(--red);box-shadow:0 0 0 0 rgba(227,38,46,.7);animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px rgba(227,38,46,0)}100%{box-shadow:0 0 0 0 rgba(227,38,46,0)}}
+#lang{background:none;border:1px solid #555;color:var(--paper);padding:2px 12px;border-radius:99px;font-size:14px}
+
+.banner{background:var(--red-soft);border-bottom:1px solid var(--red);padding:10px clamp(16px,4vw,40px);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:15px}
+.banner[hidden]{display:none}
+.banner button{background:var(--red);color:#fff;border:0;border-radius:6px;padding:4px 14px;font-weight:600}
+
+main{max-width:1100px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 80px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-block:2px solid var(--ink);margin-bottom:28px}
+.stat{padding:14px 0;padding-inline-end:16px}
+.stat+.stat{padding-inline-start:20px;border-inline-start:1px solid var(--line)}
+.stat b{display:block;font-family:var(--f-dot);font-weight:900;font-size:clamp(34px,6vw,54px);line-height:1.1}
+.stat span{font-size:14px;color:var(--mute)}
+.stat.alert b{color:var(--red)}
+
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.tab{background:none;border:1px solid var(--line);border-radius:99px;padding:3px 16px;white-space:nowrap;font-weight:600}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+.order{border-bottom:1px solid var(--line);position:relative}
+.order.fresh::before{content:"";position:absolute;inset-block:0;inset-inline-start:-14px;width:5px;background:var(--red);animation:fade 6s forwards}
+@keyframes fade{0%,70%{opacity:1}100%{opacity:0}}
+.row{width:100%;background:none;border:0;text-align:start;display:grid;grid-template-columns:70px 1.2fr 1.7fr 100px 130px;gap:14px;align-items:center;padding:14px 4px}
+.row:hover{background:var(--mist)}
+.t{font-size:13px;color:var(--mute)}
+.who b{display:block;font-weight:700}
+.who small{color:var(--mute);direction:ltr;unicode-bidi:plaintext}
+.sum{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amt{font-weight:700;white-space:nowrap}
+.pill{justify-self:start;font-size:13px;font-weight:700;padding:1px 12px;border-radius:99px;border:1.5px solid var(--ink)}
+.order.needs_review .pill{background:var(--red);border-color:var(--red);color:#fff}
+.order.confirmed .pill{background:var(--ink);color:#fff}
+
+.detail{display:none;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:28px;padding:6px 4px 26px}
+.order.open .detail{display:grid}
+.h{font-size:13px;color:var(--mute);margin-bottom:8px;font-weight:600}
+.bubble{background:var(--mist);border-radius:14px;padding:14px 16px;white-space:pre-wrap;word-break:break-word;font-size:16px;unicode-bidi:plaintext}
+.src{font-size:12px;color:var(--mute);margin-top:6px;direction:ltr;text-align:start;unicode-bidi:plaintext}
+
+.form{display:grid;gap:12px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f label,.f .lab{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:2px}
+.f .flag{color:var(--red);display:none}
+.f.miss .flag{display:inline}
+.f input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--paper)}
+.f.miss input,.f.miss .itemrow input{border-color:var(--red);background:var(--red-soft)}
+.f input[dir="ltr"]{text-align:start}
+.items .itemrow{display:grid;grid-template-columns:1fr 64px 84px;gap:8px;margin-bottom:8px}
+.add{background:none;border:1px dashed var(--mute);border-radius:8px;padding:2px 12px;font-size:14px;font-weight:600}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:2px solid var(--ink);padding-top:12px;margin-top:4px}
+.tot{font-family:var(--f-dot);font-weight:900;font-size:30px;line-height:1}
+.tot small{font-family:var(--f-body);font-size:14px;font-weight:600;margin-inline-start:6px}
+.confirm{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 22px;font-weight:700}
+.confirm:disabled{background:var(--line);color:var(--mute);cursor:not-allowed}
+.hint{font-size:13px;color:var(--red);margin-top:6px;text-align:end}
+.done{font-weight:700}
+
+.empty{padding:60px 0;text-align:center;color:var(--mute)}
+.login{position:fixed;inset:0;z-index:50;background:var(--paper);display:grid;place-items:center;padding:24px}
+.login[hidden]{display:none}
+.login form{width:min(380px,100%);display:grid;gap:14px}
+.login .mark{font-size:46px}
+.login h1{font-size:18px;font-weight:600;color:var(--mute)}
+.login .f input{padding:9px 12px}
+.login button[type=submit]{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:700}
+.login button[type=submit]:disabled{background:var(--line);color:var(--mute)}
+.login .err{color:var(--red);font-size:14px;min-height:1.7em}
+#logout{background:none;border:1px solid #555;color:var(--paper);padding:2px 12px;border-radius:99px;font-size:14px}
+#logout[hidden]{display:none}
+.toolbar{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.toolbar .tabs{flex:1;min-width:0}
+.addorder{background:var(--ink);color:#fff;border:0;border-radius:99px;padding:3px 18px;font-weight:700;white-space:nowrap}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.modal[hidden]{display:none}
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:14px;width:min(560px,100%);max-height:92vh;overflow:auto;padding:20px;display:grid;gap:12px}
+.panel h2{font-size:18px;font-weight:700}
+.panel .foot{margin-top:4px}
+.panel .btns{display:flex;gap:8px}
+.ghost{background:none;border:1px solid var(--line);border-radius:8px;padding:8px 18px;font-weight:600}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.acts .ghost{padding:6px 16px}
+.ghost.danger{color:var(--red);border-color:var(--red)}
+.ghost.danger.armed{background:var(--red);color:#fff}
+.note{font-size:13px;color:var(--mute);margin-top:6px;text-align:end}
+#toast{position:fixed;inset-inline:0;bottom:24px;margin-inline:auto;width:max-content;max-width:90vw;background:var(--ink);color:#fff;padding:8px 20px;border-radius:99px;font-weight:600;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
+#toast.err{background:var(--red)}
+
+@media (max-width:760px){
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:nth-child(3){padding-inline-start:0;border-inline-start:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .row{grid-template-columns:1fr auto;grid-template-areas:"who amt" "sum pill"}
+  .t{display:none}
+  .who{grid-area:who}.sum{grid-area:sum}.amt{grid-area:amt;text-align:end}.pill{grid-area:pill}
+  .detail{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand"><span class="mark">Wasla</span><small>وصلة</small></div>
+  <div class="bar-end">
+    <span class="live" id="live"><i></i><b id="liveTxt"></b></span>
+    <button id="lang" type="button">EN</button>
+    <button id="logout" type="button" hidden></button>
+  </div>
+</header>
+
+<div class="banner" id="banner" hidden>
+  <span id="bannerTxt"></span>
+  <button id="sim" type="button"></button>
+</div>
+
+<main>
+  <section class="stats" id="stats"></section>
+  <div class="toolbar"><nav class="tabs" id="tabs"></nav><button class="addorder" id="newOrder" type="button"></button></div>
+  <section id="list"></section>
+</main>
+<div class="modal" id="modal" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle"></h2>
+    <div class="pair">
+      <div class="f"><label for="m_name" id="mNameLab"></label><input id="m_name"></div>
+      <div class="f"><label for="m_phone" id="mPhoneLab"></label><input id="m_phone" dir="ltr" inputmode="tel"></div>
+    </div>
+    <div class="f"><label for="m_address" id="mAddrLab"></label><input id="m_address"></div>
+    <div class="f items"><div class="lab" id="mItemsLab"></div>
+      <div id="m_items"></div>
+      <button class="add" type="button" id="m_add"></button>
+    </div>
+    <div class="foot">
+      <div class="tot"><span id="m_tot">0</span><small id="mCur"></small></div>
+      <div class="btns"><button class="ghost" type="button" id="m_cancel"></button><button class="confirm" type="button" id="m_save"></button></div>
+    </div>
+  </div>
+</div>
+<div class="login" id="login" hidden>
+  <form id="loginForm">
+    <span class="mark">Wasla</span>
+    <h1 id="loginTitle"></h1>
+    <div class="f"><label for="email" id="emailLab"></label><input id="email" type="email" dir="ltr" autocomplete="username" required></div>
+    <div class="f"><label for="password" id="passLab"></label><input id="password" type="password" dir="ltr" autocomplete="current-password" required></div>
+    <div class="err" id="loginErr" role="alert"></div>
+    <button type="submit" id="loginBtn"></button>
+  </form>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ===== CONFIG: fill these 3, leave empty to run in demo mode ===== */
+const CONFIG = {
+  SUPABASE_URL: 'https://zzwkljgvcmzvyfwuccoz.supabase.co',   // https://zzwkljgvcmzvyfwuccoz.supabase.co
+  SUPABASE_KEY: 'sb_publishable_vE94DAXs-MViWJUUCdr2_g_Ac5Kbzbt',   // sb_publishable_...  (never the secret key)
+  BACKEND_URL:  ''    // your server, e.g. https://xxxx.ngrok-free.app  (needed for the WhatsApp reply)
+};
+
+/* ===== i18n ===== */
+const T = {
+  ar:{all:'الكل',new:'جديد',needs_review:'محتاج مراجعة',confirmed:'متأكد',
+      sNew:'طلبات جديدة',sRev:'محتاجة مراجعة',sOk:'متأكدة',sSum:'إجمالي المتأكد (ج.م)',
+      raw:'رسالة العميل',fields:'الطلب زي ما فهمه وصلة',name:'اسم العميل',phone:'التليفون',address:'العنوان',
+      items:'الأصناف',item:'الصنف',qty:'الكمية',price:'السعر',addItem:'+ صنف',total:'الإجمالي',cur:'ج.م',
+      missing:'ناقص',confirm:'أكّد الطلب',confirming:'بيتأكد...',confirmed_ok:'الطلب اتأكد واتبعت رد للعميل',
+      confirmed_local:'الطلب اتأكد (من غير رد واتساب، حط BACKEND_URL)',needFill:'كمّل البيانات الناقصة الأول',
+      isDone:'اتأكد ✓',live:'مباشر',off:'مش متصل',demo:'بيانات تجريبية. حط مفاتيح Supabase في أول الملف عشان تشوف الطلبات الحقيقية.',
+      sim:'حاكي طلب جديد',empty:'مفيش طلبات هنا. ابعت رسالة على رقم واتساب التجربة وهتظهر هنا لوحدها.',
+      edit:'تعديل',editDone:'تم',del:'حذف',delSure:'اضغط تاني للحذف',deleted:'الطلب اتحذف',errDel:'الحذف فشل. جرّب تاني.',editNote:'التعديل ده مش هيبعت رسالة جديدة للعميل.',
+      newOrder:'+ طلب يدوي',newTitle:'إضافة طلب يدوي',save:'احفظ الطلب',cancel:'إلغاء',saving:'بيحفظ...',savedOk:'الطلب اتضاف',errAdd:'الطلب ماتضافش. جرّب تاني.',needItem:'حط صنف واحد على الأقل',manual:'طلب اتضاف يدوي',
+      loginTitle:'سجّل دخولك عشان تشوف طلباتك',email:'الإيميل',password:'الباسورد',signIn:'دخول',signingIn:'بيدخل...',errLogin:'الإيميل أو الباسورد غلط.',logout:'خروج',
+      errConn:'مش قادر يتصل بـ Supabase. راجع الـ URL والـ key في أول الملف.',errSave:'التعديل ماتحفظش. جرّب تاني.',
+      errConfirm:'التأكيد فشل. اتأكد إن السيرفر شغال وإن CORS مفعّل.',now:'دلوقتي',m:'من {n} د',h:'من {n} س'},
+  en:{all:'All',new:'New',needs_review:'Needs review',confirmed:'Confirmed',
+      sNew:'New orders',sRev:'Need review',sOk:'Confirmed',sSum:'Confirmed total (EGP)',
+      raw:'Customer message',fields:'Order as Wasla read it',name:'Customer name',phone:'Phone',address:'Address',
+      items:'Items',item:'Item',qty:'Qty',price:'Price',addItem:'+ Item',total:'Total',cur:'EGP',
+      missing:'Missing',confirm:'Confirm order',confirming:'Confirming...',confirmed_ok:'Order confirmed and customer notified',
+      confirmed_local:'Order confirmed (no WhatsApp reply sent: set BACKEND_URL)',needFill:'Fill the missing fields first',
+      isDone:'Confirmed ✓',live:'Live',off:'Offline',demo:'Demo data. Add your Supabase keys at the top of the file to see real orders.',
+      sim:'Simulate new order',empty:'No orders here. Message the WhatsApp test number and it will appear on its own.',
+      edit:'Edit',editDone:'Done',del:'Delete',delSure:'Tap again to delete',deleted:'Order deleted',errDel:'Delete failed. Try again.',editNote:'Editing will not send the customer a new message.',
+      newOrder:'+ Manual order',newTitle:'Add manual order',save:'Save order',cancel:'Cancel',saving:'Saving...',savedOk:'Order added',errAdd:'Order not added. Try again.',needItem:'Add at least one item',manual:'Added manually',
+      loginTitle:'Sign in to see your orders',email:'Email',password:'Password',signIn:'Sign in',signingIn:'Signing in...',errLogin:'Wrong email or password.',logout:'Sign out',
+      errConn:'Cannot reach Supabase. Check the URL and key at the top of the file.',errSave:'Change not saved. Try again.',
+      errConfirm:'Confirm failed. Check the server is running and CORS is enabled.',now:'now',m:'{n}m ago',h:'{n}h ago'}
+};
+let lang = 'ar', filter = 'all', openId = null, editId = null, orders = [];
+const locked = o => o.status === 'confirmed' && editId !== o.id;
+const t = k => T[lang][k] ?? k;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+
+/* ===== data layer ===== */
+const sb = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY) ? supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) : null;
+const SEL = '*, messages(body, from_number, created_at)';
+
+const REQ = ['customer_name','customer_phone','address','items'];
+const missingOf = o => REQ.filter(k => k === 'items'
+  ? !(o.items||[]).some(i => (i.name||'').trim())
+  : !String(o[k]||'').trim());
+const totalOf = o => (o.items||[]).reduce((s,i) => s + (+i.qty||0)*(+i.price||0), 0);
+
+function sample(){
+  const n = Date.now(), mk = (min, o) => ({id:'d'+Math.random().toString(36).slice(2), created_at:new Date(n-min*60000).toISOString(), ...o});
+  return [
+    mk(1,{status:'new',customer_name:'منى السيد',customer_phone:'01012345678',address:'12 شارع النصر، المنصورة',
+      items:[{name:'تيشيرت أسود L',qty:2,price:250}],total:500,missing_fields:[],
+      messages:{body:'ازيك عايزة 2 تيشيرت اسود L وتتوصلي ١٢ ش النصر المنصورة\nاسمي منى 01012345678',from_number:'201012345678'}}),
+    mk(6,{status:'needs_review',customer_name:'Ahmed',customer_phone:'',address:'',
+      items:[{name:'كوتشي ابيض 42',qty:1,price:900}],total:900,missing_fields:['customer_phone','address'],
+      messages:{body:'ahmed 3ayez kotshy abyad 42',from_number:'201155500011'}}),
+    mk(90,{status:'confirmed',customer_name:'سارة علي',customer_phone:'01198765432',address:'مدينة نصر، القاهرة',
+      items:[{name:'شنطة بيج',qty:1,price:450}],total:450,missing_fields:[],
+      messages:{body:'عايزة شنطة بيج توصل مدينة نصر. سارة 01198765432',from_number:'201198765432'}})
+  ];
+}
+const SIM_POOL = [
+  {customer_name:'كريم حسن',customer_phone:'01234567890',address:'شارع الجمهورية، طنطا',items:[{name:'هودي رمادي M',qty:1,price:600},{name:'كاب أسود',qty:2,price:120}],
+   body:'يا باشا عايز هودي رمادي M وكابين اسود\nكريم حسن - شارع الجمهورية طنطا\n01234567890'},
+  {customer_name:'dina',customer_phone:'',address:'',items:[{name:'فستان اخضر',qty:1,price:1100}],
+   body:'hi 3ayza el fostan el akhdar'},
+  {customer_name:'محمود فتحي',customer_phone:'01099887766',address:'دمياط الجديدة، المنطقة الثالثة',items:[{name:'بنطلون جينز 32',qty:3,price:380}],
+   body:'3 بناطيل جينز مقاس 32 ... محمود فتحي 01099887766 دمياط الجديدة المنطقة التالتة'}
+];
+
+async function fetchAll(){
+  const {data,error} = await sb.from('orders').select(SEL).order('created_at',{ascending:false}).limit(100);
+  if(error) throw error;
+  return data || [];
+}
+async function fetchOne(id){
+  const {data} = await sb.from('orders').select(SEL).eq('id',id).single();
+  return data;
+}
+function subscribe(){
+  sb.channel('orders-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'}, async p => {
+      if(p.eventType === 'DELETE'){ orders = orders.filter(o => o.id !== p.old.id); return render(); }
+      const row = await fetchOne(p.new.id); if(!row) return;
+      const i = orders.findIndex(o => o.id === row.id);
+      if(i < 0){ row._fresh = true; orders.unshift(row); render(); }
+      else {
+        orders[i] = {...row, _fresh: orders[i]._fresh};
+        const typing = document.activeElement && $('list').contains(document.activeElement);
+        typing ? (refreshRow(orders[i]), renderStats()) : render();
+      }
+    })
+    .subscribe(s => setLive(s === 'SUBSCRIBED'));
+}
+
+/* ===== render ===== */
+function ago(d){
+  const m = Math.floor((Date.now() - new Date(d)) / 60000);
+  if(m < 1) return t('now');
+  if(m < 60) return t('m').replace('{n}', m);
+  if(m < 1440) return t('h').replace('{n}', Math.floor(m/60));
+  return new Date(d).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB',{day:'numeric',month:'short'});
+}
+const money = n => Math.round(n||0).toLocaleString('en-US') ;
+const itemsSummary = o => (o.items||[]).filter(i=>i.name).map(i => `${i.qty||1}× ${i.name}`).join('، ') || '—';
+
+function setLive(on){ $('live').classList.toggle('on', on); $('liveTxt').textContent = on ? t('live') : t('off'); }
+
+function renderStats(){
+  const c = s => orders.filter(o => o.status === s).length;
+  const sum = orders.filter(o => o.status === 'confirmed').reduce((s,o) => s + (+o.total||0), 0);
+  $('stats').innerHTML = `
+    <div class="stat"><b>${c('new')}</b><span>${t('sNew')}</span></div>
+    <div class="stat ${c('needs_review')?'alert':''}"><b>${c('needs_review')}</b><span>${t('sRev')}</span></div>
+    <div class="stat"><b>${c('confirmed')}</b><span>${t('sOk')}</span></div>
+    <div class="stat"><b>${money(sum)}</b><span>${t('sSum')}</span></div>`;
+  const tabs = ['all','new','needs_review','confirmed'];
+  $('tabs').innerHTML = tabs.map(k => `<button class="tab" type="button" data-tab="${k}" aria-pressed="${filter===k}">${t(k)}</button>`).join('');
+}
+
+function rowInner(o){
+  return `<span class="t">${ago(o.created_at)}</span>
+    <span class="who"><b>${esc(o.customer_name) || '—'}</b><small>${esc(o.customer_phone) || '—'}</small></span>
+    <span class="sum">${esc(itemsSummary(o))}</span>
+    <span class="amt">${money(o.total)} ${t('cur')}</span>
+    <span class="pill">${t(o.status)}</span>`;
+}
+
+function field(o,k,label,dir){
+  const miss = missingOf(o).includes(k);
+  return `<div class="f ${miss?'miss':''}" data-k="${k}">
+    <label>${label}<span class="flag">${t('missing')}</span></label>
+    <input data-f="${k}" value="${esc(o[k])}" ${dir?`dir="${dir}"`:''} ${locked(o)?'disabled':''}></div>`;
+}
+function itemRows(o){
+  const dis = locked(o) ? 'disabled' : '';
+  return (o.items||[]).map((i,x) => `<div class="itemrow">
+    <input data-i="${x}" data-p="name" placeholder="${t('item')}" value="${esc(i.name)}" ${dis}>
+    <input data-i="${x}" data-p="qty" type="number" min="1" inputmode="numeric" dir="ltr" value="${esc(i.qty)}" ${dis}>
+    <input data-i="${x}" data-p="price" type="number" min="0" inputmode="numeric" dir="ltr" value="${esc(i.price)}" ${dis}></div>`).join('');
+}
+function detailInner(o){
+  const m = o.messages, miss = missingOf(o), done = o.status==='confirmed';
+  return `<div>
+      <div class="h">${t('raw')}</div>
+      <div class="bubble" dir="auto">${esc(m?.body) || t('manual')}</div>
+      <div class="src">${esc(m?.from_number || '')}</div>
+    </div>
+    <div class="form">
+      <div class="h">${t('fields')}</div>
+      <div class="pair">${field(o,'customer_name',t('name'))}${field(o,'customer_phone',t('phone'),'ltr')}</div>
+      ${field(o,'address',t('address'))}
+      <div class="f items ${miss.includes('items')?'miss':''}" data-k="items">
+        <div class="lab">${t('items')}<span class="flag">${t('missing')}</span></div>
+        <div id="itemrows">${itemRows(o)}</div>
+        ${locked(o) ? '' : `<button class="add" type="button" data-add="${o.id}">${t('addItem')}</button>`}
+      </div>
+      <div>
+        <div class="foot">
+          <div class="tot"><span id="tot-${o.id}">${money(o.total)}</span><small>${t('cur')}</small></div>
+          <div class="acts">
+            ${done ? `<span class="done">${t('isDone')}</span>
+                      <button class="ghost" type="button" data-edit="${o.id}">${editId===o.id ? t('editDone') : t('edit')}</button>`
+                   : `<button class="confirm" type="button" data-confirm="${o.id}" ${miss.length?'disabled':''}>${t('confirm')}</button>`}
+            <button class="ghost danger" type="button" data-del="${o.id}">${t('del')}</button>
+          </div>
+        </div>
+        ${done && editId===o.id ? `<div class="note">${t('editNote')}</div>` : ''}
+        <div class="hint" data-hint="${o.id}" ${miss.length && !done ? '' : 'hidden'}>${t('needFill')}</div>
+      </div>
+    </div>`;
+}
+
+function render(){
+  renderStats();
+  const rows = orders.filter(o => filter === 'all' || o.status === filter);
+  $('list').innerHTML = rows.length ? rows.map(o => `
+    <article class="order ${o.status} ${openId===o.id?'open':''} ${o._fresh?'fresh':''}" data-id="${o.id}">
+      <button class="row" type="button" aria-expanded="${openId===o.id}">${rowInner(o)}</button>
+      <div class="detail">${openId===o.id ? detailInner(o) : ''}</div>
+    </article>`).join('') : `<div class="empty">${t('empty')}</div>`;
+  orders.forEach(o => delete o._fresh);
+}
+
+/* patch a single row without losing input focus */
+function refreshRow(o){
+  const el = document.querySelector(`.order[data-id="${o.id}"]`); if(!el) return;
+  el.className = `order ${o.status} ${openId===o.id?'open':''}`;
+  el.querySelector('.row').innerHTML = rowInner(o);
+  const miss = missingOf(o);
+  el.querySelectorAll('.f[data-k]').forEach(f => f.classList.toggle('miss', miss.includes(f.dataset.k)));
+  const tot = $('tot-'+o.id); if(tot) tot.textContent = money(o.total);
+  const c = el.querySelector('.confirm'); if(c) c.disabled = miss.length > 0;
+  const h = el.querySelector('[data-hint]'); if(h) h.hidden = !miss.length;
+}
+
+/* ===== actions ===== */
+function toast(msg, err){
+  const el = $('toast'); el.textContent = msg; el.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.className = '', 3200);
+}
+const find = id => orders.find(o => String(o.id) === String(id));
+
+async function persist(o){
+  o.total = totalOf(o);
+  o.missing_fields = missingOf(o);
+  if(o.status !== 'confirmed') o.status = o.missing_fields.length ? 'needs_review' : 'new';
+  refreshRow(o); renderStats();
+  if(!sb) return;
+  const {data, error} = await sb.from('orders').update({
+    customer_name:o.customer_name, customer_phone:o.customer_phone, address:o.address,
+    items:o.items, total:o.total, missing_fields:o.missing_fields, status:o.status
+  }).eq('id', o.id).select('id');
+  if(error || !data?.length) toast(t('errSave'), true);
+}
+
+async function confirmOrder(o, btn){
+  btn.disabled = true; btn.textContent = t('confirming');
+  try{
+    if(CONFIG.BACKEND_URL){
+      const { data:{ session } } = await sb.auth.getSession();
+      const headers = {'Content-Type':'application/json'};
+      if(session) headers.Authorization = 'Bearer ' + session.access_token;
+      if(/ngrok/.test(CONFIG.BACKEND_URL)) headers['ngrok-skip-browser-warning'] = '1';
+      const r = await fetch(CONFIG.BACKEND_URL, {method:'POST', headers, body: JSON.stringify({order_id:o.id})});
+      if(!r.ok) throw new Error(r.status);
+      toast(t('confirmed_ok'));
+    } else if(sb){
+      const {error} = await sb.from('orders').update({status:'confirmed'}).eq('id', o.id);
+      if(error) throw error;
+      toast(t('confirmed_local'));
+    } else toast(t('confirmed_ok'));
+    o.status = 'confirmed'; render();
+  } catch(e){
+    toast(t('errConfirm'), true);
+    btn.disabled = false; btn.textContent = t('confirm');
+  }
+}
+
+async function deleteOrder(btn){
+  if(!btn.dataset.armed){
+    btn.dataset.armed = '1'; btn.textContent = t('delSure'); btn.classList.add('armed');
+    setTimeout(() => { if(btn.isConnected){ delete btn.dataset.armed; btn.textContent = t('del'); btn.classList.remove('armed'); } }, 4000);
+    return;
+  }
+  const id = btn.dataset.del; btn.disabled = true;
+  if(sb){
+    const {data, error} = await sb.from('orders').delete().eq('id', id).select('id');
+    if(error || !data?.length){ btn.disabled = false; console.error('delete failed', error); return toast(t('errDel') + ' (' + (error ? (error.message||error.code) : 'no permission') + ')', true); }
+  }
+  orders = orders.filter(o => String(o.id) !== String(id)); openId = null; editId = null;
+  render(); toast(t('deleted'));
+}
+
+function simulate(){
+  const p = SIM_POOL[Math.floor(Math.random()*SIM_POOL.length)];
+  const o = {id:'d'+Math.random().toString(36).slice(2), created_at:new Date().toISOString(), status:'new',
+    customer_name:p.customer_name, customer_phone:p.customer_phone, address:p.address, items:JSON.parse(JSON.stringify(p.items)),
+    messages:{body:p.body, from_number:'2010'+Math.floor(10000000+Math.random()*89999999)}, _fresh:true};
+  o.total = totalOf(o); o.missing_fields = missingOf(o); o.status = o.missing_fields.length ? 'needs_review' : 'new';
+  orders.unshift(o); render();
+}
+
+/* ===== events ===== */
+$('list').addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  if(add){ const o = find(add.dataset.add); o.items = [...(o.items||[]), {name:'',qty:1,price:0}];
+    $('itemrows').innerHTML = itemRows(o); $('itemrows').lastElementChild.querySelector('input').focus(); return persist(o); }
+  const del = e.target.closest('[data-del]');
+  if(del) return deleteOrder(del);
+  const ed = e.target.closest('[data-edit]');
+  if(ed){ editId = editId === ed.dataset.edit ? null : ed.dataset.edit; return render(); }
+  const cf = e.target.closest('[data-confirm]');
+  if(cf) return confirmOrder(find(cf.dataset.confirm), cf);
+  const row = e.target.closest('.row');
+  if(row){ const id = row.closest('.order').dataset.id; openId = openId === id ? null : id; editId = null; render(); }
+});
+$('list').addEventListener('change', e => {
+  const inp = e.target, id = inp.closest('.order')?.dataset.id, o = id && find(id); if(!o) return;
+  if(inp.dataset.f){ o[inp.dataset.f] = inp.value.trim(); }
+  else if(inp.dataset.i !== undefined){
+    const it = o.items[+inp.dataset.i], p = inp.dataset.p;
+    it[p] = p === 'name' ? inp.value : (+inp.value || 0);
+  } else return;
+  persist(o);
+});
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if(!b) return; filter = b.dataset.tab; render();
+});
+$('lang').addEventListener('click', () => {
+  lang = lang === 'ar' ? 'en' : 'ar';
+  document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  $('lang').textContent = lang === 'ar' ? 'EN' : 'عربي';
+  $('bannerTxt').textContent = t('demo'); $('sim').textContent = t('sim'); applyI18n();
+  setLive(!!sb && $('live').classList.contains('on')); render();
+});
+$('sim').addEventListener('click', simulate);
+setInterval(() => { if(!(document.activeElement && $('list').contains(document.activeElement))) render(); }, 60000);
+
+/* ===== auth + boot ===== */
+function applyI18n(){
+  $('loginTitle').textContent = t('loginTitle'); $('emailLab').textContent = t('email');
+  $('passLab').textContent = t('password'); $('loginBtn').textContent = t('signIn'); $('logout').textContent = t('logout');
+  $('newOrder').textContent = t('newOrder'); $('mTitle').textContent = t('newTitle');
+  $('mNameLab').textContent = t('name'); $('mPhoneLab').textContent = t('phone'); $('mAddrLab').textContent = t('address');
+  $('mItemsLab').textContent = t('items'); $('m_add').textContent = t('addItem'); $('mCur').textContent = t('cur');
+  $('m_cancel').textContent = t('cancel'); $('m_save').textContent = t('save');
+  document.querySelectorAll('#m_items .itemrow input[data-p="name"]').forEach(i => i.placeholder = t('item'));
+}
+
+/* ===== manual order ===== */
+const mRow = () => `<div class="itemrow">
+  <input data-p="name" placeholder="${t('item')}">
+  <input data-p="qty" type="number" min="1" inputmode="numeric" dir="ltr" value="1">
+  <input data-p="price" type="number" min="0" inputmode="numeric" dir="ltr" placeholder="0"></div>`;
+const mItems = () => [...document.querySelectorAll('#m_items .itemrow')].map(r => ({
+  name: r.querySelector('[data-p=name]').value.trim(),
+  qty: +r.querySelector('[data-p=qty]').value || 1,
+  price: +r.querySelector('[data-p=price]').value || 0 })).filter(i => i.name);
+const mTotal = () => $('m_tot').textContent = money(mItems().reduce((s,i) => s + i.qty*i.price, 0));
+function openModal(){
+  ['m_name','m_phone','m_address'].forEach(id => $(id).value = '');
+  $('m_items').innerHTML = mRow(); $('m_tot').textContent = '0';
+  $('m_save').disabled = false; $('m_save').textContent = t('save');
+  $('modal').hidden = false; $('m_name').focus();
+}
+const closeModal = () => $('modal').hidden = true;
+async function saveManual(){
+  const o = { customer_name:$('m_name').value.trim(), customer_phone:$('m_phone').value.trim(),
+              address:$('m_address').value.trim(), items:mItems() };
+  if(!o.items.length) return toast(t('needItem'), true);
+  o.total = totalOf(o); o.missing_fields = missingOf(o);
+  o.status = o.missing_fields.length ? 'needs_review' : 'new';
+  const btn = $('m_save'); btn.disabled = true; btn.textContent = t('saving');
+  if(!sb){
+    Object.assign(o, {id:'d'+Math.random().toString(36).slice(2), created_at:new Date().toISOString(), messages:null, _fresh:true});
+    orders.unshift(o);
+  } else {
+    const {data:{session}} = await sb.auth.getSession();
+    const {data, error} = await sb.from('orders').insert({...o, seller_id: session.user.id}).select(SEL).single();
+    if(error){ btn.disabled = false; btn.textContent = t('save'); console.error('insert order failed', error); return toast(t('errAdd') + ' (' + (error.message||error.code||'') + ')', true); }
+    if(!orders.some(x => x.id === data.id)){ data._fresh = true; orders.unshift(data); }
+  }
+  closeModal(); render(); toast(t('savedOk'));
+}
+$('newOrder').addEventListener('click', openModal);
+$('m_cancel').addEventListener('click', closeModal);
+$('m_save').addEventListener('click', saveManual);
+$('m_add').addEventListener('click', () => { $('m_items').insertAdjacentHTML('beforeend', mRow()); $('m_items').lastElementChild.querySelector('input').focus(); });
+$('m_items').addEventListener('input', mTotal);
+$('modal').addEventListener('click', e => { if(e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+function showLogin(){ $('login').hidden = false; $('logout').hidden = true; setLive(false); }
+async function startApp(){
+  $('login').hidden = true; $('logout').hidden = false;
+  try{ orders = await fetchAll(); render(); subscribe(); }
+  catch(e){ toast(t('errConn'), true); render(); }
+}
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('loginBtn'); btn.disabled = true; btn.textContent = t('signingIn'); $('loginErr').textContent = '';
+  const {error} = await sb.auth.signInWithPassword({email:$('email').value.trim(), password:$('password').value});
+  btn.disabled = false; btn.textContent = t('signIn');
+  if(error){ $('loginErr').textContent = t('errLogin'); return; }
+  $('password').value = ''; startApp();
+});
+$('logout').addEventListener('click', async () => {
+  await sb.removeAllChannels(); await sb.auth.signOut();
+  orders = []; openId = null; render(); showLogin();
+});
+
+(async function init(){
+  $('bannerTxt').textContent = t('demo'); $('sim').textContent = t('sim'); applyI18n();
+  setLive(false);
+  if(!sb){ $('banner').hidden = false; orders = sample(); openId = orders[1].id; return render(); }
+  sb.auth.onAuthStateChange(ev => { if(ev === 'SIGNED_OUT') showLogin(); });
+  const {data:{session}} = await sb.auth.getSession();
+  session ? startApp() : showLogin();
+})();
+</script>
+</body>
+</html>
